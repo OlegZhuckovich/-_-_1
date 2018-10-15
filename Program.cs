@@ -1,23 +1,42 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
 namespace РИС_Лаб_1
 {
-    class Program
+    class SweetFactory
     {
 
         private String sweet;
-        private String factory;
         private long price;
+        private long quantity;
 
-
-        public Program(String sweet, String factory, long price){
+        public SweetFactory(String sweet, long price, long quantity){
             this.sweet = sweet;
-            this.factory = factory;
             this.price = price;
+            this.quantity = quantity;
         }
 
+        public String toString
+        {
+            get
+            {
+                return this.sweet + " " + this.price + " " + this.quantity;
+            }
+        }
+
+        public static void PrintArray(string[] sweets){
+            Console.WriteLine("----------------------------------------");
+            Console.WriteLine("|            Название| Цена| Количество|");
+            Console.WriteLine("----------------------------------------");
+            foreach (string sweet in sweets)
+            {
+                string[] sweetNew = sweet.Split(' ');
+                Console.WriteLine(String.Format("|{0,20}|{1,5}|{2,11}|", sweetNew[0], sweetNew[1], sweetNew[2]));
+                Console.WriteLine("----------------------------------------");
+            }
+        }
 
         static void Main(string[] args)
         {
@@ -27,78 +46,119 @@ namespace РИС_Лаб_1
                 Console.WriteLine("Выберите пункт:\n" +
                                   " 1 - Ввести новый пункт\n" +
                                   " 2 - Посмотреть продажи конфет\n" +
-                                  " 3 - Посмотреть конкретную фабрику\n" +
-                                  " 4 - Удалить запись\n" +
-                                  " 5 - Редактировать запись\n" +
-                                  " 6 - Сортировать по фабрикам\n" +
+                                  " 3 - Поиск конфет по названию\n" +
+                                  " 4 - Удалить наименование конфет\n" +
+                                  " 5 - Редактировать наименование конфет\n" +
+                                  " 6 - Сортировать по наименованиям\n" +
                                   " 7 - Выход");
                 choice = Console.ReadLine();
+                Console.Clear();
                 switch (choice)
                 {
                     case "1":
                         {
-                            Console.WriteLine("Введите название конфет, цену и количество:"); //чтение вводимых данных
+                            Console.WriteLine("Введите название конфет: ");
                             String sweet = Console.ReadLine();
-                            String factory = Console.ReadLine();
+                            Console.WriteLine("Введите цену: ");
                             long price = System.Int64.Parse(Console.ReadLine());
-                            Program obj = new Program(sweet, factory, price);
+                            Console.WriteLine("Введите количество: ");
+                            long quantity = System.Int64.Parse(Console.ReadLine());
+                            SweetFactory sweetFactory = new SweetFactory(sweet, price, quantity);
                             //открытие файла с данными на запись
                             FileStream fileStream = new FileStream("file.txt", FileMode.OpenOrCreate, FileAccess.Write);
                             fileStream.Seek(0, SeekOrigin.End);
                             StreamWriter streamWriter = new StreamWriter(fileStream);
                             //запись в файл
-                            streamWriter.WriteLine(obj.sweet + " " + obj.factory + " " + obj.price.ToString() + " "); 
+                            streamWriter.WriteLine(sweetFactory.toString); 
                             streamWriter.Close();
                             fileStream.Close();
+                            Console.Clear();
+                            Console.WriteLine("Конфеты успешно добавлены в ассортимент фабрики\n");
                             break;
                         }
                     case "2":
                         {
-                            string[] lines = File.ReadAllLines("file.txt");
-                            foreach (string sweet in lines)
-                            {
-                                Console.WriteLine(sweet + '\n');
-                            }
+                            string[] sweets = File.ReadAllLines("file.txt");
+                            SweetFactory.PrintArray(sweets);
                             break;
                         }
                     case "3":
                         {
-                            Console.WriteLine("Введите название кондитерской фабрики");
-                            String sweetFactory = Console.ReadLine();
-                            string[] sweetFactoryData = File.ReadAllLines("file.txt");
-                            foreach (string sweet in sweetFactoryData)
-                            {
-                                String sweetData = sweet.Substring(0, sweet.IndexOf(" "));
-                                if (sweetData == sweetFactory)
-                                {
-                                    Console.WriteLine(sweet);
+                            Console.WriteLine("Введите название конфет: ");
+                            String sweetSearch = Console.ReadLine();
+                            string[] sweets = File.ReadAllLines("file.txt");
+                            ArrayList sweetArray = new ArrayList();
+                            foreach(string sweet in sweets) {
+                                string[] sweetNew = sweet.Split(' ');
+                                if (sweetNew[0] == sweetSearch) {
+                                    sweetArray.Add(sweet);
                                 }
                             }
+                            SweetFactory.PrintArray((string[])sweetArray.ToArray(typeof(string)));
                             break;
                         }
                     case "4":
                         {
-                            Console.WriteLine("Введите название конфет и фабрику для удаления записи");
-                            String sweet = Console.ReadLine();
-                            String factory = Console.ReadLine();
-                            string[] sweetFactoryData = File.ReadAllLines("file.txt");
+                            Console.WriteLine("Введите наименование конфет для удаления");
+                            String sweetDelete = Console.ReadLine();
+                            string[] sweets = File.ReadAllLines("file.txt");
 
-                            List<String> list = new List<String>();
-                            foreach(string abc in sweetFactoryData){
-                                string[] sweetData = abc.Split(" ");
-                                if(sweetData[0]!=sweet && sweetData[1]!=factory){
-                                    list.Add(abc);
+                            FileStream fileStream = File.Open("file.txt", FileMode.Create);
+                            StreamWriter streamWriter = new StreamWriter(fileStream);
+
+                            foreach (string sweet in sweets)
+                            {
+                                string[] sweetNew = sweet.Split(' ');
+                                if (sweetNew[0] != sweetDelete)
+                                {
+                                    streamWriter.WriteLine(sweet);
                                 }
                             }
-                            list.ToArray();
-                            FileStream fcreate = File.Open("file.txt", FileMode.Create);
-                            foreach(string abd in list){
-                                
-                            }
+
+                            streamWriter.Close();
+                            fileStream.Close();
+                            Console.Clear();
+                            Console.WriteLine("Наименование конфет успешно удалено\n");
                             break;
                         }
-                    case "5": break;
-                    case "6": break;
+                    case "5":
+                        {
+                            Console.WriteLine("Введите наименование конфет для редактирования");
+                            String sweetEditing = Console.ReadLine();
+                            string[] sweets = File.ReadAllLines("file.txt");
+
+                            FileStream fileStream = File.Open("file.txt", FileMode.Create);
+                            StreamWriter streamWriter = new StreamWriter(fileStream);
+
+                            foreach (string sweet in sweets)
+                            {
+                                string[] sweetNew = sweet.Split(' ');
+                                if (sweetNew[0] == sweetEditing)
+                                {
+                                    Console.WriteLine("Введите название конфет: ");
+                                    String sweetName = Console.ReadLine();
+                                    Console.WriteLine("Введите цену: ");
+                                    long price = System.Int64.Parse(Console.ReadLine());
+                                    Console.WriteLine("Введите количество: ");
+                                    long quantity = System.Int64.Parse(Console.ReadLine());
+                                    streamWriter.WriteLine(sweetName + " " + price + " " + quantity);
+                                    Console.Clear();
+                                    Console.WriteLine("Наименование конфет успешно отредактировано\n");
+                                } else {
+                                    streamWriter.WriteLine(sweet);
+                                }
+                            }
+                            streamWriter.Close();
+                            fileStream.Close();
+                            break;
+                        }
+                    case "6": 
+                        {
+                            string[] sweets = File.ReadAllLines("file.txt");
+                            Array.Sort(sweets);
+                            SweetFactory.PrintArray(sweets);
+                            break;
+                        }
                     case "7": Environment.Exit(0); break;
                 }
             } while (choice != "7");
